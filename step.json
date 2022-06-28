@@ -1,0 +1,63 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "controller",
+  "States": {
+    "controller": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-2:034114936036:function:lambda_controller_series_temporais:$LATEST"
+      },
+      "Next": "Map"
+    },
+    "Map": {
+      "Type": "Map",
+      "Iterator": {
+        "StartAt": "process",
+        "States": {
+          "process": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "arn:aws:lambda:us-east-2:034114936036:function:lambda_process_series_temporais:$LATEST"
+            },
+            "End": true
+          }
+        }
+      },
+      "MaxConcurrency": 20,
+      "ItemsPath": "$.Payload.list_series",
+      "Next": "merge",
+      "OutputPath": "$.[0].Payload",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 1,
+          "IntervalSeconds": 5,
+          "MaxAttempts": 1
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Map"
+        }
+      ]
+    },
+    "merge": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-2:034114936036:function:lambda-merge-series-temporais:$LATEST",
+        "Payload.$": "$"
+      },
+      "End": true
+    }
+  }
+}
