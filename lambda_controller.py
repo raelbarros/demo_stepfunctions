@@ -5,8 +5,8 @@ from datetime import datetime
 def lambda_handler():
 
     s3_client = boto3.client('s3', 
-        aws_access_key_id='AKIAQP4LITTSJTTZFQLR',
-        aws_secret_access_key='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',
+        aws_access_key_id=,
+        aws_secret_access_key=,
         region_name='us-east-2'
     )
 
